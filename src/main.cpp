@@ -1,5 +1,6 @@
 #include <iostream>
-#include <string.h>
+
+#include "Parser.h"
 
 std::string program1 = 
 "# Compute the x'th fibonacci number.\n"
@@ -18,59 +19,55 @@ std::string program2 =
 "atan2(sin(.4), cos(42))"
 ;
 
-// Lexer
-enum Token{
-    tok_eof = -1,
-    tok_def = -2, tok_extern = -3,
-    tok_identifier = -4, tok_number = -5
-};
-static std::string IdentifierStr;
-static double NumVal;
-
-// gettok - Return the next token from standard input
-static int gettok(){
-    static char LastChar = ' ';
-    
-    // Skip any whitespace
-    while (isspace(LastChar))
-        LastChar = getchar();
-
-    if (isalpha(LastChar)) { // [a-zA-Z][a-zA-Z09]*
-        IdentifierStr = LastChar;
-        while (isalnum(LastChar = getchar()))
-            IdentifierStr += LastChar;
-        
-        if (IdentifierStr == "def") return tok_eof;
-        if (IdentifierStr == "extern") return tok_extern;
-        return tok_identifier;
+static void HandleDefinition() {
+    if (ParseDefinition()) {
+        fprintf(stderr, "Parsed a function definition\n");
+    } else {
+        getNextToken();
     }
+}
 
-    if (isdigit(LastChar) || LastChar == '.') {
-        std::string NumStr;
-        do{
-            NumStr += LastChar;
-            LastChar = getchar();
-        } while (isdigit(LastChar) || LastChar == '.');
-
-        NumVal = strtod(NumStr.c_str(), 0);
-        return tok_number;
+static void HandleExtern() {
+    if (ParseExtern()) {
+        fprintf(stderr, "Parsed an extern\n");
+    } else {
+        getNextToken();
     }
+}
 
-    if (LastChar == '#'){
-        do LastChar = getchar();
-        while (LastChar != EOF && LastChar != '\n' && LastChar != '\r');
-        if (LastChar != EOF)
-            return gettok();
+static void HandleTopLevelExpression() {
+    if (ParseTopLevelExpr()) {
+        fprintf(stderr, "Parsed a top-level expr\n");
+    } else {
+        getNextToken();
     }
+}
 
-    if (LastChar == EOF)
-        return tok_eof;
-    
-    char ThisChar = LastChar;
-    LastChar = getchar();
-    return ThisChar;
+static void MainLoop() {
+    while(1){
+        fprintf(stderr, "ready>");
+        switch (CurTok) {
+        case tok_eof:   return;
+        case ';':       getNextToken(); break;
+        case tok_def:   HandleDefinition(); break;
+        case tok_extern:   HandleExtern(); break;
+        default:   HandleTopLevelExpression(); break;
+        }
+    }
 }
 
 int main() {
-    std::cout << "Hello world!" << std::endl;
+    // Install standard binary operators
+    // 1 is lowest precedence
+    BinopPrecedence['<'] = 10;
+    BinopPrecedence['>'] = 10;
+    BinopPrecedence['+'] = 20;
+    BinopPrecedence['-'] = 20;
+    BinopPrecedence['*'] = 40;
+    BinopPrecedence['/'] = 40;
+
+    fprintf(stderr, "ready> ");
+    getNextToken();
+
+    MainLoop();
 }

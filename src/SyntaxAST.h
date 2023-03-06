@@ -1,4 +1,4 @@
-#include <string.h>
+#include <string>
 
 class ExprAST {
 public:
@@ -20,11 +20,11 @@ public:
 };
 
 // binary operator "a + b"
-class BinaryExprAst : public ExprAST {
+class BinaryExprAST : public ExprAST {
     char Op;
     ExprAST *LHS, *RHS;
 public:
-    BinaryExprAst(char op, ExprAST *lhs, ExprAST *rhs)
+    BinaryExprAST(char op, ExprAST *lhs, ExprAST *rhs)
         : Op(op), LHS(lhs), RHS(rhs) {}
 };
 
@@ -35,12 +35,24 @@ class CallExprAST : public ExprAST {
 public:
     CallExprAST(const std::string &callee, std::vector<ExprAST*> &args)
         : Callee(callee), Args(args) {}
-}
+};
 
+// function "name(args...) body"
+
+// function head
 class PrototypeAST {
     std::string Name;
     std::vector<std::string> Args;
     public:
     PrototypeAST(const std::string &name, const std::vector<std::string> &args)
-        : Name(name), Args(args) ()
-}
+        : Name(name), Args(args) {}
+};
+
+// function define
+class FunctionAST {
+    PrototypeAST *Proto;
+    ExprAST *Body;
+public:
+    FunctionAST(PrototypeAST *proto, ExprAST *body)
+        :Proto(proto), Body(body) {}
+};
